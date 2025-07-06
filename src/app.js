@@ -23,8 +23,15 @@ app.use(express.urlencoded({
 }))
 
 //config for static
-app.use(express.static())
+app.use(express.static("public"))
 
 app.use(cookieParser())
 
+//routes
+import userRouter from './routes/user.routes.js'
+
+//routes declaration --- we use middleware
+app.use("/api/v1/users", userRouter)
+
+// http://localhost:8000/api/v1/users/route
 export {app}
