@@ -15,9 +15,9 @@ const registerUser = asyncHandler(async (req, res) => {
     // remove password and refresh token
     //check for user creation
     //return response
-
+    
     const {fullName, email, username, password} = req.body
-    console.log("email:", email);
+    //console.log("email:", email);
 
     /*if(fullName === ""){
         throw new ApiError(400, "fullname is Required")
@@ -31,7 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     // we can use certain operators using $sign
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
 
@@ -40,15 +40,21 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     
     const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverImageLocalPath = req.files?.coverImage[0]?.path
+    //const coverImageLocalPath = req.files?.coverImage[0]?.path
+
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
 
     if(!avatarLocalPath){
         throw new ApiError(400, "Avatar is Required")
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath); 
+    
+    
     if(!avatar){
         throw new ApiError(400, "Avatar is Required")
     }
@@ -62,7 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
         username: username.toLowerCase()
     })
 
-    const createdUser = await user.findById(user._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password -refreshTokens"
     )
 
