@@ -57,13 +57,13 @@ userSchema.pre("save", async function (next) {
 })
 
 //Designing custom methods to check data
-userSchema.method.isPasswordCorrect = async function
+userSchema.methods.isPasswordCorrect = async function
 (password) {
     return await bcrypt.compare(password, this.password)
 }
 
-userSchema.method.generateAcccessToken = function(){
-    jwt.sign({
+userSchema.methods.generateAcccessToken = function(){
+    return jwt.sign({
         _id: this._id,
         email: this.email,
         username: this.username,
@@ -75,8 +75,8 @@ userSchema.method.generateAcccessToken = function(){
     } 
 )
 }
-userSchema.method.generateRefreshToken = function(){
-    jwt.sign({
+userSchema.methods.generateRefreshToken = function(){
+    return jwt.sign({
         _id: this._id
     },
     process.env.REFRESH_TOKEN_SECRET,
