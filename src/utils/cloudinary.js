@@ -27,4 +27,25 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export {uploadOnCloudinary} 
+// Delete previous image on cloud
+const deleteOnCloudinary = async (url) => {
+    try {
+        // Extract public_id: after 'upload/' and before extension
+        const parts = url.split('/upload/')[1].split('.');
+        const public_id = parts[0]; // everything before extension
+
+        console.log("Deleting public_id:", public_id);
+
+        const response = await cloudinary.uploader.destroy(public_id, {
+            resource_type: "auto", // handles image, video, etc.
+        });
+
+        console.log("Cloudinary deletion response:", response);
+        return response;
+    } catch (error) {
+        console.error("Error deleting from Cloudinary:", error);
+        return null;
+    }
+};
+
+export { uploadOnCloudinary, deleteOnCloudinary};
