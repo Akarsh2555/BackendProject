@@ -131,6 +131,20 @@ const getLikedVideos = asyncHandler( async (req, res) => {
         throw new ApiError(404, "User Not Found")
     }
 
+    const like = await Like.find({ likedBy: userId, video: {$exists: true}})
+    .populate({
+        path: "video",
+        populate: {
+            path: "owner",
+            select: "username fullName avatar"
+        }
+    })
+
+    const likedVideos = like.map((like) => like.video).filter((video) => video != null)
+
+    return res
+    .status(200)
+    .json(200, likedVideos, "Liked Videos Feteched Successfully")
     
 })
 
