@@ -1,4 +1,5 @@
 import { Subscription } from "../models/subscription.model.js";
+import { User } from "../models/user.model.js";
 import mongoose, {isValidObjectId} from "mongoose"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -6,7 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const toggleSubscription = asyncHandler( async (req, res) => {
     const {channelId} = req.params
-    const subscriberId = req.body._id
+    const subscriberId = req.user._id  
 
     if(!isValidObjectId(channelId)){
         throw new ApiError(400, "Invalid channel Id")
@@ -14,6 +15,7 @@ const toggleSubscription = asyncHandler( async (req, res) => {
     if(subscriberId.toString() === channelId.toString()){
         throw new ApiError(400, "You cannot subscribe to your own channel")
     }
+    
     const channelUser = await User.findById(channelId);
     if (!channelUser) {
         throw new ApiError(404, "Channel user not found");
@@ -29,7 +31,7 @@ const toggleSubscription = asyncHandler( async (req, res) => {
         return res
         .status(200)
         .json(
-            new ApiResponse(200, preSubscription, "UnSubscribed Successfully")
+            new ApiResponse(200, { isSubscribed: false }, "Unsubscribed Successfully")
         )
     } else {
         const subscription = await Subscription.create({
@@ -40,10 +42,9 @@ const toggleSubscription = asyncHandler( async (req, res) => {
         return res
         .status(200)
         .json(
-            new ApiResponse(200, subscription, "Subscribed Successfully" )
+            new ApiResponse(200, { isSubscribed: true }, "Subscribed Successfully" )
         )
     }
-
 })
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;

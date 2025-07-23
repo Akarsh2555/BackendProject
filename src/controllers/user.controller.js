@@ -230,25 +230,34 @@ const refreshAccessToken = asyncHandler( async (req, res) => {
     }
 })
 
-const changeCurrentPassword = asyncHandler( async(req, res) => {
-    const {oldPassword, newPassword} = req.body
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user?._id)
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-
-    if(!isPasswordCorrect){
-        throw new ApiError(400, "Invalid Password")
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "Old password and new password are required");
     }
+    if (!req.user?._id) {
+        throw new ApiError(401, "User not authenticated");
+    }
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
-    user.password = newPassword
-    await user.save({validateBeforeSave: false})
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Current password is incorrect");
+    }
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(new ApiResponse(200, {}, "Password Changed Successfully"))
-    )
-})
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Password changed successfully")
+        );
+});
 
 const getCurrentUser = asyncHandler( async(req, res) => {
     return res
@@ -287,7 +296,7 @@ const updateUserAvatar = asyncHandler( async(req, res) => {
 
     
 
-    const avatar = uploadOnCloudinary(avatarLocalPath)
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if(!avatar.url){
         throw new ApiError(400, "Error Uploading AvatarURL") 
@@ -315,7 +324,7 @@ const updateUserCoverImage = asyncHandler( async(req, res) => {
         throw new ApiError(400, "coverImage file is missing")
     }
 
-    const coverImage = uploadOnCloudinary(coverImageLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
     if(!coverImage.url){
         throw new ApiError(400, "Error Uploading coverImageURL") 
@@ -419,7 +428,7 @@ const getWatchHistory = asyncHandler( async(req,res) => {
         },
         {
             $lookup: {
-                from: "vedios",
+                from: "videos",
                 localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",

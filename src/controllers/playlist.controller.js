@@ -45,20 +45,17 @@ const createPlaylist = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, playlist, "Playlist created successfully"));
 })
 const getUserPlaylists = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+  const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new ApiError(400, "Invalid User ID");
   }
 
   const playlists = await Playlist.find({ owner: userId })
-    .select("name description videos createdAt")
+    .select("name description videos createdAt owner")
     .populate("videos", "title thumbnail")
     .sort({ createdAt: -1 });
 
-if (playlists.owner.toString() !== req.user._id.toString()) {
-  throw new ApiError(403, "You are not authorized to Update this playlist")
-}
   const playlistsWithCount = playlists.map((playlist) => ({
     _id: playlist._id,
     name: playlist.name,
@@ -76,8 +73,9 @@ if (playlists.owner.toString() !== req.user._id.toString()) {
         playlistsWithCount,
         "User playlists fetched successfully"
       )
-    )
-})
+    );
+});
+
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     
