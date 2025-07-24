@@ -11,6 +11,13 @@ const allowedOrigins = [
   /\.vercel\.app$/          // allow ALL Vercel subdomains!
 ];
 
+/*
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}))
+*/
+
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true); // allow server-to-server
