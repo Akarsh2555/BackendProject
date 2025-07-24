@@ -6,10 +6,31 @@ import cookieParser from 'cookie-parser'
 const app = express()
 
 // handeling CORS - middleware syntax- app.use()
+const allowedOrigins = [
+  "http://localhost:5173", // for local dev
+  /\.vercel\.app$/          // allow ALL Vercel subdomains!
+];
+
 app.use(cors({
-    origin: "https://video-tube-frontend-nu.vercel.app",
-    credentials: true
-}))
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow server-to-server
+
+    const isAllowed = allowedOrigins.some((allowed) =>
+      typeof allowed === "string"
+        ? origin === allowed
+        : allowed instanceof RegExp
+        ? allowed.test(origin)
+        : false
+    );
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed: " + origin));
+    }
+  },
+  credentials: true
+}));
 
 // config from incomming json data
 app.use(express.json({
