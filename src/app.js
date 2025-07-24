@@ -7,7 +7,7 @@ const app = express()
 
 // handeling CORS - middleware syntax- app.use()
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: "https://video-tube-frontend-nu.vercel.app",
     credentials: true
 }))
 
