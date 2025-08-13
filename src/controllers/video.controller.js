@@ -5,6 +5,9 @@ import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {deleteOnCloudinary, uploadOnCloudinary} from "../utils/cloudinary.js"
+import {Like} from "../models/like.model.js";
+import {Comment} from "../models/comment.model.js";
+import {Subscription} from "../models/subscription.model.js";
 
 const uploadVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -205,6 +208,7 @@ const watchVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
+    const userId = req.user?._id;
     
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid Video ID");
@@ -217,15 +221,37 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Video not found");
     }
 
-    // Check if video is published or user is the owner
-    if (!video.isPublished && video.owner._id.toString() !== req.user._id.toString()) {
+    if (!video.isPublished && (!userId || video.owner._id.toString() !== userId.toString())) {
         throw new ApiError(403, "Video is not published");
     }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, video, "Video fetched successfully"));
+    const likesCount = await Like.countDocuments({ video: videoId });
+    const isLikedByUser = userId
+        ? await Like.exists({ video: videoId, likedBy: userId })
+        : false;
+
+
+    const commentsCount = await Comment.countDocuments({ video: videoId });
+
+
+    let isSubscribedToOwner = false;
+    if (userId && video.owner?._id) {
+        const subscription = await Subscription.exists({
+            subscriber: userId,
+            channel: video.owner._id
+        });
+        isSubscribedToOwner = !!subscription;
+    }
+
+    return res.status(200).json(new ApiResponse(200, {
+        ...video.toObject(),
+        likesCount,
+        isLikedByUser: !!isLikedByUser,
+        commentsCount,
+        isSubscribedToOwner
+    }, "Video fetched successfully"));
 });
+
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query;
