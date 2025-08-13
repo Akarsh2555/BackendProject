@@ -57,7 +57,7 @@ const addComment = asyncHandler( async (req, res) => {
     const comment = await Comment.create({
         content,
         video: videoId,
-        owner: req.user?._id
+        owner: req.user
     })
 
     return res
